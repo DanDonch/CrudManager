@@ -24,29 +24,30 @@ public class PlayerServiceImpl implements PlayerService {
         this.playerMapper = playerMapper;
     }
 
+    public List<Player> findAll() {
+        return playerRepository.findAll();
+    }
+
     @Override
     public Optional<Player> findById(String id) {
         return playerRepository.findById(id);
     }
 
     @Override
-    public void save(Player player) {
-        playerRepository.save(player);
+    public List<Player> findByName(String name) {
+        return playerRepository.findByNameContainingIgnoreCase(name);
+    }
+
+    @Override
+    public Player save(Player player) {
+        return playerRepository.save(player);
     }
 
     public void update(String id, PlayerCreationDto updatedPlayerDto) {
         Player existingPlayer = playerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Player not found with id: " + id));
-
-        // Используем mapper для обновления существующего объекта
         Player updatedPlayer = playerMapper.updateEntity(existingPlayer, updatedPlayerDto);
-
-        // Сохраняем обновленный объект в репозиторий
         playerRepository.save(updatedPlayer);
-    }
-
-    public boolean existsById(String id) {
-        return playerRepository.existsById(id);
     }
 
     @Override
@@ -59,13 +60,7 @@ public class PlayerServiceImpl implements PlayerService {
         }
     }
 
-    @Override
-    public List<Player> findAll() {
-        return playerRepository.findAll();
-    }
-
-    @Override
-    public List<Player> findByName(String name) {
-        return playerRepository.findByNameContainingIgnoreCase(name);
+    public boolean existsById(String id) {
+        return playerRepository.existsById(id);
     }
 }

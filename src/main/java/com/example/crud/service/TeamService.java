@@ -7,10 +7,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TeamService {
-    Optional<Team> getById(String id);
-    void save(Team team);
-    void update(String id, TeamCreationDto updatedTeam);
-    void delete(String id);
     List<Team> findAll();
-    List<Team> findByName(String name); // Добавлен метод для поиска по имени
+
+    Optional<Team> findById(String id);
+
+    List<Team> findByName(String name);
+
+    Team save(Team team);
+
+    void update(String id, TeamCreationDto updatedTeam);
+
+    boolean delete(String id);
+
+    boolean existsById(String id);
 }

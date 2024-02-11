@@ -38,11 +38,8 @@ public class PlayerController {
     public ResponseEntity<List<Player>> findAll() {
         try {
             List<Player> players = playerService.findAll();
-            logger.info("ВСЕГО ИГРОКОВ " + players.size());
-
             return ResponseEntity.ok(players);
         } catch (Exception e) {
-            // Обработка ошибок, например, базы данных или других исключений
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -51,12 +48,7 @@ public class PlayerController {
     public ResponseEntity<Player> getById(@RequestHeader("X-Auth-Token") String token, @PathVariable String id) {
         try {
             Optional<Player> optionalPlayer = playerService.findById(id);
-
-            if (optionalPlayer.isPresent()) {
-                return ResponseEntity.ok(optionalPlayer.get());
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+            return optionalPlayer.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -68,24 +60,18 @@ public class PlayerController {
             List<Player> players = playerService.findByName(name);
             return ResponseEntity.ok(players);
         } catch (Exception e) {
-            // Обработка ошибок, например, базы данных или других исключений
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 
     @GetMapping("/search")
     public ResponseEntity<List<Player>> getByName(
             @RequestParam(defaultValue = "10") int size,
             @RequestParam int page) {
-
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<Player> playerPage = playerRepository.findAll(pageable);
-
             List<Player> players = playerPage.getContent();
-            logger.info("Найдено игроков: {}", players.size());
-
             return ResponseEntity.ok(players);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -99,9 +85,7 @@ public class PlayerController {
         logger.info("команда " + playerDto.getTeamId());
         try {
             Player player = playerMapper.toEntity(playerDto);
-
-            // Сохраняем игрока в репозитории
-            Player createdPlayer = playerRepository.save(player);
+            Player createdPlayer = playerService.save(player);
             URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                     .path("/{id}")
                     .buildAndExpand(createdPlayer.getId())
@@ -111,14 +95,13 @@ public class PlayerController {
             return ResponseEntity.badRequest().build();
         }
     }
+
     @PutMapping("/{id}")
     public ResponseEntity<Player> update(@PathVariable String id, @RequestBody PlayerCreationDto updatedPlayer) {
         try {
-
             if (!playerService.existsById(id)) {
                 return ResponseEntity.notFound().build();
             }
-
             playerService.update(id, updatedPlayer);
             return ResponseEntity.ok(playerService.findById(id).orElseThrow(EntityNotFoundException::new));
         } catch (EntityNotFoundException e) {
@@ -132,7 +115,6 @@ public class PlayerController {
     public ResponseEntity<RestResponse> delete(@PathVariable String id) {
         try {
             boolean deleted = playerService.delete(id);
-
             if (deleted) {
                 return ResponseEntity.noContent().build();
             } else {
@@ -143,5 +125,4 @@ public class PlayerController {
                     .body(new RestResponse("Error deleting player"));
         }
     }
-
 }
