@@ -1,5 +1,6 @@
 package com.example.crud.controller;
 
+import com.example.crud.aop.annotation.Authorized;
 import com.example.crud.data.dto.RestResponse;
 import com.example.crud.data.dto.TeamCreationDto;
 import com.example.crud.data.entity.Team;
@@ -35,6 +36,7 @@ public class TeamController {
     private String authToken;
 
     @GetMapping
+    @Authorized
     public ResponseEntity<List<Team>> findAll() {
         try {
             List<Team> teams = teamService.findAll();
@@ -45,7 +47,8 @@ public class TeamController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Team> getById(@RequestHeader("X-Auth-Token") String token, @PathVariable String id) {
+    @Authorized
+    public ResponseEntity<Team> getById(@PathVariable String id) {
         try {
             Optional<Team> optionalTeam = teamService.findById(id);
             return optionalTeam.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -55,6 +58,7 @@ public class TeamController {
     }
 
     @GetMapping("/search/{name}")
+    @Authorized
     public ResponseEntity<List<Team>> findTeamByName(@PathVariable String name) {
         try {
             List<Team> teams = teamService.findByName(name);
@@ -65,6 +69,7 @@ public class TeamController {
     }
 
     @GetMapping("/search")
+    @Authorized
     public ResponseEntity<List<Team>> getByName(
             @RequestParam(defaultValue = "10") int size,
             @RequestParam int page) {
@@ -79,6 +84,7 @@ public class TeamController {
     }
 
     @PostMapping
+    @Authorized
     public ResponseEntity<Team> save(@RequestBody TeamCreationDto teamDto) {
         try {
             Team team = teamMapper.toEntity(teamDto);
@@ -94,6 +100,7 @@ public class TeamController {
     }
 
     @PutMapping("/{id}")
+    @Authorized
     public ResponseEntity<Team> update(@PathVariable String id, @RequestBody TeamCreationDto updatedTeam) {
         try {
             if (!teamService.existsById(id)) {
@@ -109,6 +116,7 @@ public class TeamController {
     }
 
     @DeleteMapping("/{id}")
+    @Authorized
     public ResponseEntity<RestResponse> delete(@PathVariable String id) {
         try {
             boolean deleted = teamService.delete(id);

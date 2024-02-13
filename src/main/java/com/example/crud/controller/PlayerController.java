@@ -1,5 +1,6 @@
 package com.example.crud.controller;
 
+import com.example.crud.aop.annotation.Authorized;
 import com.example.crud.data.dto.PlayerCreationDto;
 import com.example.crud.data.dto.RestResponse;
 import com.example.crud.data.entity.Player;
@@ -35,6 +36,7 @@ public class PlayerController {
     private String authToken;
 
     @GetMapping
+    @Authorized
     public ResponseEntity<List<Player>> findAll() {
         try {
             List<Player> players = playerService.findAll();
@@ -45,9 +47,10 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Player> getById(@RequestHeader("X-Auth-Token") String token, @PathVariable String id) {
+    @Authorized
+    public ResponseEntity<Player> getById(@PathVariable String id) {
         try {
-            Optional<Player> optionalPlayer = playerService.findById(id);
+            Optional<Player> optionalPlayer = Optional.ofNullable(playerService.findById(id));
             return optionalPlayer.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -55,6 +58,7 @@ public class PlayerController {
     }
 
     @GetMapping("/search/{name}")
+    @Authorized
     public ResponseEntity<List<Player>> findProductByName(@PathVariable String name) {
         try {
             List<Player> players = playerService.findByName(name);
@@ -65,6 +69,7 @@ public class PlayerController {
     }
 
     @GetMapping("/search")
+    @Authorized
     public ResponseEntity<List<Player>> getByName(
             @RequestParam(defaultValue = "10") int size,
             @RequestParam int page) {
@@ -79,6 +84,7 @@ public class PlayerController {
     }
 
     @PostMapping
+    @Authorized
     public ResponseEntity<Player> save(@RequestBody PlayerCreationDto playerDto) {
         logger.info("Имя игрока " + playerDto.getName());
         logger.info("дата рождения " + playerDto.getBirthDate());
@@ -97,13 +103,14 @@ public class PlayerController {
     }
 
     @PutMapping("/{id}")
+    @Authorized
     public ResponseEntity<Player> update(@PathVariable String id, @RequestBody PlayerCreationDto updatedPlayer) {
         try {
             if (!playerService.existsById(id)) {
                 return ResponseEntity.notFound().build();
             }
             playerService.update(id, updatedPlayer);
-            return ResponseEntity.ok(playerService.findById(id).orElseThrow(EntityNotFoundException::new));
+            return ResponseEntity.ok(playerService.findById(id));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
@@ -112,6 +119,7 @@ public class PlayerController {
     }
 
     @DeleteMapping("/{id}")
+    @Authorized
     public ResponseEntity<RestResponse> delete(@PathVariable String id) {
         try {
             boolean deleted = playerService.delete(id);

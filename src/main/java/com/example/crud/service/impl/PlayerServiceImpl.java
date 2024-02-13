@@ -2,6 +2,7 @@ package com.example.crud.service.impl;
 
 import com.example.crud.data.dto.PlayerCreationDto;
 import com.example.crud.data.entity.Player;
+import com.example.crud.exception.NotFoundException;
 import com.example.crud.repository.PlayerRepository;
 import com.example.crud.service.PlayerService;
 import com.example.crud.util.PlayerMapper;
@@ -9,9 +10,9 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PlayerServiceImpl implements PlayerService {
@@ -29,8 +30,8 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public Optional<Player> findById(String id) {
-        return playerRepository.findById(id);
+    public Player findById(String id) {
+        return playerRepository.findById(id).orElseThrow(() -> new NotFoundException("Player with id " + id + " not  found"));
     }
 
     @Override
@@ -40,7 +41,11 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     public Player save(Player player) {
-        return playerRepository.save(player);
+        try {
+            return playerRepository.save(player);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error saving player: " + e.getMessage());
+        }
     }
 
     public void update(String id, PlayerCreationDto updatedPlayerDto) {
